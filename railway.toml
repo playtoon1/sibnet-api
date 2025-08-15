@@ -1,0 +1,8 @@
+[build]
+dockerfile = "Dockerfile"
+
+[env]
+PORT = { default = "5000" }
+
+[http]
+port = 5000
