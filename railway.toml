@@ -1,11 +1,13 @@
 # railway.toml
 
-# ✅ Bunu ekleyerek Dockerfile kullanmaya zorla
+# ✅ Dockerfile kullanmaya ZORLA
 [build]
 dockerfile = "Dockerfile"
 
+# Port ayarı
 [env]
 PORT = { default = "5000" }
 
+# HTTP erişimi
 [http]
 port = 5000
