@@ -2,46 +2,51 @@ from flask import Flask, request, jsonify
 import subprocess
 import sys
 import re
+import os  # eksik olabilir, ekleyelim
 
 app = Flask(__name__)
 
 def extract_videoid(url):
-    """Sibnet URL'sinden videoid çıkar"""
     match = re.search(r'videoid=(\d+)', url)
     return match.group(1) if match else None
 
-def get_real_sibnet_link(videoid):
-    """Playwright scriptini çalıştır ve gerçek MP4 linkini döndür"""
+@app.route('/api/sibnet', methods=['GET'])
+def get_video():
+    url = request.args.get('url')
+    if not url or "sibnet.ru" not in url:
+        return jsonify({"error": "Geçersiz URL"}), 400
+
+    videoid = extract_videoid(url)
+    if not videoid:
+        return jsonify({"error": "videoid bulunamadı"}), 400
+
+    final_url = f"https://video.sibnet.ru/shell.php?videoid={videoid}"
+
     try:
-        # test.py'yi çalıştır: python test.py https://video.sibnet.ru/shell.php?videoid=123456
+        # test.py çalıştır
         result = subprocess.run(
-            [sys.executable, "test.py", f"https://video.sibnet.ru/shell.php?videoid={videoid}"],
+            [sys.executable, "test.py", final_url],
             capture_output=True,
             text=True,
             timeout=40
         )
-        # Konsol çıktısından mp4 linkini al
-        match = re.search(r'https://dv\d+\.sibnet\.ru.+\.mp4\?st=[^&]+&e=\d+', result.stdout)
-        return match.group(0) if match else None
+        output = result.stdout
+
+        # Gerçek dv linkini çıkar
+        match = re.search(r'https://dv\d+\.sibnet\.ru.+\.mp4\?st=[^&]+&e=\d+', output)
+        if match:
+            return jsonify({"video_url": match.group(0)})
+        else:
+            return jsonify({"error": "Video linki alınamadı", "output": output}), 500
     except Exception as e:
-        print(f"Error: {e}")
-        return None
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/api/sibnet', methods=['GET'])
-def api_sibnet():
-    url = request.args.get('url')
-    if not url:
-        return jsonify({"error": "URL gerekli"}), 400
-
-    videoid = extract_videoid(url)
-    if not videoid:
-        return jsonify({"error": "Geçersiz Sibnet URL"}), 400
-
-    video_url = get_real_sibnet_link(videoid)
-    if video_url:
-        return jsonify({"video_url": video_url})
-    else:
-        return jsonify({"error": "Video linki alınamadı"}), 500
+# ✅ ROOT ROUTE (test için)
+@app.route('/')
+def home():
+    return "✅ API çalışıyor! Kullanım: /api/sibnet?url=..."
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    # PORT ortam değişkenine göre ayarla
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
