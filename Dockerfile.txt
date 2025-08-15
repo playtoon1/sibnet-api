@@ -1,18 +1,18 @@
-# Official Playwright Python image
+# Dockerfile
+
+# Playwright destekli resmi imaj
 FROM mcr.microsoft.com/playwright/python:v1.54.0-jammy
 
-# Uygulama dizini oluştur
+# Çalışma dizini
 WORKDIR /app
 
-# requirements.txt kopyala ve yükle
+# Gerekli dosyaları kopyala
 COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-# playwright install komutunu çalıştır
-RUN playwright install chromium
-
-# Python dosyalarını kopyala
 COPY . .
 
-# Sunucuyu başlat
+# Pip ile kurulum ve Chromium yükle
+RUN pip install --no-cache-dir -r requirements.txt
+RUN playwright install chromium
+
+# API'yi başlat
 CMD ["python", "api.py"]
