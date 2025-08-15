@@ -1,3 +1,6 @@
+# railway.toml
+
+# ✅ Bunu ekleyerek Dockerfile kullanmaya zorla
 [build]
 dockerfile = "Dockerfile"
 
@@ -6,7 +9,3 @@ PORT = { default = "5000" }
 
 [http]
 port = 5000
-
-# ✅ START KOMUTU EKLENDİ
-[run]
-command = "python api.py"
